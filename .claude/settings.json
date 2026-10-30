@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(kubectl delete:*)",
+      "Bash(kubectl edit:*)",
+      "Bash(kubectl patch:*)",
+      "Bash(kubectl replace:*)",
+      "Bash(kubectl scale:*)",
+      "Bash(kubectl rollout restart:*)",
+      "Bash(kubectl drain:*)",
+      "Bash(kubectl cordon:*)",
+      "Bash(kubectl uncordon:*)",
+      "Bash(kubectl taint:*)",
+      "Bash(kubectl label:*)",
+      "Bash(kubectl annotate:*)",
+      "Bash(kubectl exec:*)",
+      "Bash(kubectl debug:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(kubectl create:*)",
+      "Bash(kubectl set:*)",
+      "Bash(kubectl rollout undo:*)",
+      "Bash(kubectl rollout pause:*)",
+      "Bash(kubectl rollout resume:*)",
+      "Bash(kubectl cp:*)",
+      "Bash(helm install:*)",
+      "Bash(helm upgrade:*)",
+      "Bash(helm uninstall:*)",
+      "Bash(helm delete:*)",
+      "Bash(helm rollback:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(~/.kube/**)",
+      "Read(~/.ssh/**)"
+    ],
+    "ask": [
+      "Bash(ssh:*)",
+      "Bash(scp:*)"
+    ]
+  }
+}

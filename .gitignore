@@ -1,0 +1,43 @@
+# Secrets / environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*kubeconfig*
+kubeconfig*
+values-local.yaml
+values-*.local.yaml
+secrets/
+*.secret.yaml
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# OS / IDE
+.DS_Store
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# Go
+operator/bin/
+operator/cover.out
+*.test
+
+# Java / Gradle
+.gradle/
+build/
+out/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Node
+node_modules/
+console-web/dist/
+*.log
+npm-debug.log*
+pnpm-debug.log*

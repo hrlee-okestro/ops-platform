@@ -1,0 +1,11 @@
+{
+  "folders": [
+    { "name": "ops-platform", "path": "." },
+    { "name": "ops-platform-manifests", "path": "../ops-platform-manifests" }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.DS_Store": true
+    }
+  }
+}
