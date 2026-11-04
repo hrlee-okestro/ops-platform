@@ -39,7 +39,7 @@ Kubernetes Operator가 운영 정책을 선언적으로 관리하고, 웹 콘솔
 | 영역 | 기술 |
 |---|---|
 | operator | Go, kubebuilder, controller-runtime, envtest |
-| console-api | Java 21, Spring Boot 3, Spring Data JPA, Flyway, Spring Security, Actuator + Micrometer, Gradle |
+| console-api | Java 21, Spring Boot 4, Spring Data JPA, Flyway, Spring Security, Actuator + Micrometer, Gradle |
 | console-web | React + TypeScript (Vite), TanStack Query, React Router, MUI 또는 shadcn/ui |
 | DB | PostgreSQL (스토리지 클래스 `nfs-csi`, 확장 불가/Delete 회수 정책 주의) |
 | 배포 | Docker 멀티스테이지, GHCR, Helm 또는 Kustomize, ArgoCD (App of Apps), GitHub Actions, Trivy |
