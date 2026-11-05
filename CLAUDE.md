@@ -26,6 +26,7 @@ Kubernetes Operator가 운영 정책을 선언적으로 관리하고, 웹 콘솔
 8. 노드/네트워크/CNI/스토리지/ingress-nginx/istio 설정 변경 금지. 불안정 신호(cilium, apiserver 재시작 다수)가 있으므로 무거운 스택은 경량 설정으로 올리고 리소스 요청/제한을 반드시 둔다.
 9. **Claude가 쓰는 kubeconfig는 읽기 전용 ServiceAccount(`claude-readonly`) 전용 파일 하나뿐이다** (`~/.kube/ops-platform.yaml`, 단기 토큰, Secret/기존 서비스 워크로드 조회 불가, RBAC 정의는 `ops-platform-manifests/bootstrap/claude-readonly-rbac.yaml`). **admin kubeconfig는 Claude에게 제공하지 않는다.** 토큰/kubeconfig 내용은 채팅에 붙여넣지 않는다. 토큰이 만료되면 사용자가 `scripts/make-readonly-kubeconfig.sh`로 재발급한다. 맥의 `~/.kube/`에는 다른(회사) 클러스터 설정이 여러 개 있으므로, 모든 kubectl/helm 명령은 `--kubeconfig ~/.kube/ops-platform.yaml`(또는 `KUBECONFIG` 지정)과 `--context`를 명시해서 실행한다. 현재 컨텍스트(`current-context`)에 의존하지 않는다. 다른 클러스터 설정 파일은 읽거나 수정하지 않는다.
 10. 의심스러우면 실행하지 말고 사용자에게 묻는다.
+11. **노드당 메모리 사용률 80% 이하**를 지킨다. 우리 워크로드는 preferred nodeAffinity로 한 노드(`<WORKLOAD_NODE>`)에 모으고, 메모리 limits 합계는 8Gi 이하로 둔다. 근거와 세부 규칙은 [docs/adr/0001-capacity-and-placement.md](docs/adr/0001-capacity-and-placement.md).
 
 ## 공개 저장소 규칙 (public repo)
 
