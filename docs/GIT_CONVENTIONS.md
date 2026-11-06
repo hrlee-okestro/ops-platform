@@ -69,7 +69,7 @@ git diff --cached | grep -nE '(^|[^0-9])10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|B
 
 - kubeconfig, `.env`, 키/인증서가 스테이징되지 않았는지 확인 (`.gitignore`에 등록되어 있음)
 - 가능하면 **gitleaks**를 pre-commit 훅이나 CI에 추가한다 (단계 1의 CI 작업에서 도입 권장)
-- 내부 IP와 호스트명은 `<CLUSTER_IP>`, `<INGRESS_HOST>` 같은 플레이스홀더로 쓴다
+- 내부 IP와 도메인은 `<CLUSTER_IP>`, `<INGRESS_HOST>` 같은 플레이스홀더로 쓴다 (노드 호스트명 `kwon-master-N`은 사용자가 허용해 그대로 써도 된다)
 
 ## 커밋/푸시 절차 (사용자 직접 실행)
 

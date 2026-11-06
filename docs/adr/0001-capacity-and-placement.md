@@ -22,7 +22,7 @@
 ## 결정
 
 1. **모든 워크로드를 node-3 한 대에 모은다.** `preferredDuringSchedulingIgnoredDuringExecution` nodeAffinity(weight 100)로 `kubernetes.io/hostname`을 지정한다. 노드 라벨은 클러스터 수정이라 쓰지 않는다.
-   - 실제 호스트명은 저장소에 쓰지 않는다. 매니페스트에는 `<WORKLOAD_NODE>`로 두고 값은 `values-local.yaml` 등 gitignore 대상 파일에서 주입한다.
+   - 노드 호스트명(`kwon-master-N`)은 저장소에 써도 된다 (사용자 허용, 2026-11-06). 초기에는 `<WORKLOAD_NODE>`와 `values-local.yaml`로 분리했으나, Git에서 직접 읽는 매니페스트(dummy-app 등)는 로컬 파일을 쓸 수 없어 호스트명을 그대로 적는다. 내부 IP와 도메인은 여전히 쓰지 않는다.
 2. **모든 워크로드에 requests/limits를 설정한다.** 우리 워크로드의 **메모리 limits 합계는 8Gi 이하**로 유지한다.
    - 모든 파드가 limit까지 써도 node-3은 3,595 + 8,000 ≈ 11,600Mi(약 77%)로 80%를 넘지 않는다.
 3. **단계마다 설치 후 `kubectl top node`로 확인**하고 통과하면 다음 단계로 간다. 특히 모니터링 스택(단계 4)이 가장 크다.
