@@ -12,6 +12,10 @@ RUN ./gradlew --no-daemon bootJar -x test
 
 # 2단계: 실행. JRE만 쓰고 root가 아닌 사용자로 실행한다.
 FROM eclipse-temurin:21-jre
+# 베이스 이미지에 포함된 apt의 알려진 취약점(Trivy HIGH) 수정판만 올린다. 베이스가 갱신되면 아무 일도 하지 않는다.
+RUN apt-get update \
+    && apt-get install -y --only-upgrade apt libapt-pkg7.0 \
+    && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 10001 app
 WORKDIR /app
 COPY --from=build /src/build/libs/*.jar app.jar
