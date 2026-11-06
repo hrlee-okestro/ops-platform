@@ -57,3 +57,38 @@ CoreDNS의 `reload` 플러그인이 재시작 없이 설정을 반영했다.
 - `server misbehaving`은 "응답 없음"이 아니라 DNS 서버가 오류로 답했다는 뜻이다. CoreDNS까지는 도달했는지, 그 뒤 업스트림이 문제인지 구분해야 한다.
 - 클러스터 밖 서버에서의 성공은 파드 안에서의 성공을 보장하지 않는다. 파드 네트워크에서 직접 재현하는 1회용 파드가 가장 빠른 진단 수단이었다.
 - 가설(검색 도메인)을 먼저 세웠지만 점 붙인 이름 테스트로 반증했다. 값싼 반례 테스트 후에 수정했다.
+
+---
+
+## 2. GitHub Actions `image` 잡 실패: Trivy 액션 해석 실패와 취약점 게이트 (2026-11-06)
+
+### 증상
+dummy-app CI의 `test`는 통과하지만 `image` 잡이 실패했다. 같은 잡이 서로 다른 이유로 세 번 실패했다.
+
+| 회차 | 실패 단계 | 메시지 |
+|---|---|---|
+| 1 | Set up job | `Unable to resolve action aquasecurity/trivy-action@0.28.0, unable to find version` |
+| 2 | Set up job | `Unable to resolve action aquasecurity/setup-trivy@v0.2.1, unable to find version` |
+| 3 | Trivy scan | `Process completed with exit code 1` |
+
+### 원인
+1. 액션 태그는 `v0.28.0`처럼 `v` 접두사가 붙는다. 접두사 없이 적어서 해석에 실패했다.
+2. `trivy-action`은 내부에서 `setup-trivy@v0.2.1`을 다시 호출하는데, 그 태그가 사라져 있었다. 우리 파일을 고쳐도 외부 액션의 내부 의존성은 통제할 수 없다.
+3. 이 실패는 **오류가 아니라 게이트가 정상 동작한 것**이다. 베이스 이미지(Ubuntu)의 `apt`에 수정 버전이 나와 있는 HIGH 취약점 2건이 있어서 push 전에 중단됐다.
+
+### 진단
+- 실행 상태와 실패 단계는 공개 저장소의 Actions API(`/actions/runs/<id>/jobs`)로, 시작 단계 오류 문구는 `/check-runs/<job-id>/annotations`로 확인했다 (로그 본문은 로그인이 필요).
+- 3회차는 같은 이미지(이미 push된 `0.0.1`)를 로컬에서 같은 옵션으로 스캔해 취약점 표를 재현했다.
+
+### 조치
+1. 액션 대신 **Trivy 공식 이미지를 `docker run`으로 직접 실행**하도록 워크플로를 바꿨다. 외부 액션 의존이 사라진다.
+2. Dockerfile 실행 단계에 `apt-get install --only-upgrade apt libapt-pkg7.0`를 추가했다. 베이스가 갱신돼 이미 수정판이면 아무 일도 하지 않는다.
+3. push 전에 amd64로 로컬 빌드해 같은 스캔으로 0건을 확인했다.
+
+### 검증
+Actions `test`/`image` 성공 → manifests에 `chore(manifests): bump dummy-app to <sha>` 커밋 → ArgoCD Synced/Healthy → 파드가 새 태그로 롤링 교체.
+
+### 배운 점
+- 외부 액션은 태그가 아니라 커밋 SHA로 고정하고, 가능하면 의존이 적은 방식(공식 이미지 직접 실행)이 낫다.
+- 보안 스캔이 실패하면 "CI 오류"가 아니라 "차단된 이유"부터 읽는다. 재현은 결과를 push하기 전에 로컬에서 한다.
+- 맥 Docker Desktop은 소켓 마운트로 Trivy가 이미지를 찾지 못했다. `docker save`로 tar를 만들어 `--input`으로 스캔하면 된다.
