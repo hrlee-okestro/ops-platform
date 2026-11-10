@@ -6,4 +6,10 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: scheduledscaler-sample
 spec:
-  # TODO(user): Add fields here
+  targetRef:
+    name: dummy-app        # 같은 네임스페이스의 Deployment 이름
+  timezone: Asia/Seoul
+  scaleDown:
+    start: "18:00"         # 18:00부터
+    end: "09:00"           # 다음 날 09:00까지 replicas를 줄여 둔다
+    replicas: 0
