@@ -21,6 +21,10 @@ import (
 	"flag"
 	"os"
 
+	// 시간대 데이터를 바이너리에 내장한다. 최소 컨테이너 이미지(distroless)에는 OS 시간대 파일이 없어서
+	// 이것이 없으면 time.LoadLocation("Asia/Seoul")이 실패한다.
+	_ "time/tzdata"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -29,6 +33,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -62,7 +67,10 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var watchNamespace string
 	var tlsOpts []func(*tls.Config)
+	flag.StringVar(&watchNamespace, "watch-namespace", "",
+		"Operator가 감시하고 수정할 단일 네임스페이스. 필수이며, 비어 있으면 시작하지 않는다 (CLAUDE.md 규칙 6).")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -89,6 +97,12 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	// 안전 장치: 감시 범위를 지정하지 않으면 전체 네임스페이스를 보게 되므로, 실수로 켜지지 않게 시작을 거부한다.
+	if watchNamespace == "" {
+		setupLog.Error(nil, "The --watch-namespace flag is required")
+		os.Exit(1)
+	}
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -159,7 +173,12 @@ func main() {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
+		Scheme: scheme,
+		// 캐시(= 클러스터에서 읽어 오는 범위)를 한 네임스페이스로 제한한다.
+		// 이렇게 하면 다른 네임스페이스의 Deployment는 읽을 수도, 수정할 수도 없다.
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{watchNamespace: {}},
+		},
 		Metrics:                metricsServerOptions,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
