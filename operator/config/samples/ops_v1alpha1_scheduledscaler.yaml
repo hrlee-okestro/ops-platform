@@ -13,3 +13,7 @@ spec:
     start: "18:00"         # 18:00부터
     end: "09:00"           # 다음 날 09:00까지 replicas를 줄여 둔다
     replicas: 0
+  # 장애 조치용 임시 지시 (선택). until 전까지 시간표보다 우선한다.
+  # override:
+  #   replicas: 3
+  #   until: "2026-11-10T15:00:00Z"

@@ -39,6 +39,24 @@ spec:
           spec:
             description: spec은 원하는 상태이다 (사용자가 씀).
             properties:
+              override:
+                description: |-
+                  override가 있고 아직 until 전이면 시간표보다 우선해서 그 replicas로 맞춘다.
+                  장애 조치(예: 승인된 "replicas를 3으로 올려라")를 CR 필드 하나로 표현하기 위한 것이다.
+                properties:
+                  replicas:
+                    description: replicas는 until까지 고정할 replicas 수이다.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                  until:
+                    description: 'until은 이 지시가 유효한 마지막 시각이다 (RFC3339, 예: 2026-11-10T15:00:00Z).'
+                    format: date-time
+                    type: string
+                required:
+                - replicas
+                - until
+                type: object
               scaleDown:
                 description: scaleDown은 replicas를 줄여 두는 구간이다. 구간 밖에서는 원래 replicas(status.originalReplicas)로
                   되돌린다.
@@ -162,6 +180,7 @@ spec:
                 enum:
                 - Normal
                 - ScaledDown
+                - Overridden
                 type: string
             type: object
         required:

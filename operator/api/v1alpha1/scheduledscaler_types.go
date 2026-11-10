@@ -51,6 +51,17 @@ type ScaleDownWindow struct {
 	Replicas int32 `json:"replicas"`
 }
 
+// Override는 시간표보다 우선하는 임시 지시이다 (장애 조치용).
+// until이 지나면 Operator가 알아서 무시하고 시간표로 돌아가므로, 승인된 조치가 영원히 남지 않는다.
+type Override struct {
+	// replicas는 until까지 고정할 replicas 수이다.
+	// +kubebuilder:validation:Minimum=0
+	Replicas int32 `json:"replicas"`
+
+	// until은 이 지시가 유효한 마지막 시각이다 (RFC3339, 예: 2026-11-10T15:00:00Z).
+	Until metav1.Time `json:"until"`
+}
+
 // ScheduledScalerSpec은 사용자가 원하는 상태(선언)이다. 사용자나 console-api가 쓰고, Operator는 읽기만 한다.
 type ScheduledScalerSpec struct {
 	// targetRef는 조정할 Deployment이다.
@@ -65,10 +76,15 @@ type ScheduledScalerSpec struct {
 	// scaleDown은 replicas를 줄여 두는 구간이다. 구간 밖에서는 원래 replicas(status.originalReplicas)로 되돌린다.
 	// +required
 	ScaleDown ScaleDownWindow `json:"scaleDown"`
+
+	// override가 있고 아직 until 전이면 시간표보다 우선해서 그 replicas로 맞춘다.
+	// 장애 조치(예: 승인된 "replicas를 3으로 올려라")를 CR 필드 하나로 표현하기 위한 것이다.
+	// +optional
+	Override *Override `json:"override,omitempty"`
 }
 
 // Phase는 Operator가 판단한 현재 구간이다.
-// +kubebuilder:validation:Enum=Normal;ScaledDown
+// +kubebuilder:validation:Enum=Normal;ScaledDown;Overridden
 type Phase string
 
 const (
@@ -76,6 +92,8 @@ const (
 	PhaseNormal Phase = "Normal"
 	// PhaseScaledDown은 구간 안이라 replicas를 줄여 둔 상태이다.
 	PhaseScaledDown Phase = "ScaledDown"
+	// PhaseOverridden은 spec.override가 유효해서 시간표를 무시하고 있는 상태이다.
+	PhaseOverridden Phase = "Overridden"
 )
 
 // ScheduledScalerStatus는 Operator가 관측해서 기록하는 현재 상태이다. 사용자는 쓰지 않는다.
