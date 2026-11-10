@@ -54,7 +54,10 @@ var _ = Describe("ScheduledScaler Controller", func() {
 						Name:      resourceName,
 						Namespace: resourceNamespace,
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: opsv1alpha1.ScheduledScalerSpec{
+						TargetRef: opsv1alpha1.TargetRef{Name: "no-such-deployment"},
+						ScaleDown: opsv1alpha1.ScaleDownWindow{Start: "18:00", End: "09:00", Replicas: 0},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

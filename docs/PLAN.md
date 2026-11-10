@@ -63,6 +63,21 @@ GitOps로 배포되는 운영 콘솔에서 알람 원인을 LLM이 분석하고,
 
 중간 종료 지점: 2단계 종료(GitOps + Operator), 3단계 종료(웹 콘솔 포함, 지원 가능한 수준), 5단계 종료(풀 스코프). 일정이 밀리면 4~5단계를 줄이고 3단계까지의 품질을 높인다.
 
+## 진행 방식: 1바퀴(얇게 끝까지) → 2바퀴(깊게) (2026-11-10 결정)
+
+단계 1(GitOps) 완료 후, 전체 흐름을 먼저 얇게 한 번 연결한 뒤 단계별로 깊게 만든다.
+1바퀴 목표: **가짜 알람 1건 → LLM 분석 → 화면에서 승인 → Operator가 dummy-app replicas 변경**이 실제로 한 번 동작.
+
+| 순서 | 1바퀴에서 만드는 것 | 2바퀴로 미루는 것 |
+|---|---|---|
+| ① | Operator Reconciler 최소판 (시간표 + `override` → replicas 변경, status 기록) | finalizer, 이벤트, envtest, 수동 변경 충돌 처리, 다음 경계 시각 정밀 예약 |
+| ② | Operator를 ArgoCD로 배포 (CRD 허용, 네임스페이스 한정 RBAC) | 정교한 패키징 |
+| ③ | console-api: 알람 수신 → Claude 호출 → 제안 저장 → 승인 시 CR `override` 수정 | 로그인/권한, 배포 이력 수집 |
+| ④ | console-web: 인시던트 목록 + 승인 버튼 한 화면 | 디자인, 타임라인 |
+| ⑤ | dummy-app 부하 주입 엔드포인트, 알람은 curl로 직접 전송 | Prometheus/Alertmanager/Loki 설치 |
+
+안전 원칙(읽기 전용 클러스터 작업, AppProject 제한, 메모리 80% 규칙, LLM 직접 쓰기 금지, allowlist + 사람 승인)은 1바퀴에서도 유지한다.
+
 ## 단계별 상세
 
 ### 단계 0. 준비
